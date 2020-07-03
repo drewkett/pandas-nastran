@@ -1,0 +1,15 @@
+[package]
+name = "rbe2rs"
+version = "0.1.0"
+authors = ["andrew <burkett.andrew@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "rbe2rs"
+crate-type = ["cdylib"]
+
+[dependencies.pyo3]
+version = "0.11.1"
+features = ["extension-module"]

@@ -1,22 +1,9 @@
 
-from rbe2rs import RBE2
-a = RBE2(1,1,1,[1])
+from rbe2rs import RBE2, RBE2Storage5
 import numpy as np
 import pandas as pd
 import random
 import time
-
-class RBE2(object):
-    __slots__ = ("eid","gm","cn","gns")
-
-    def __init__(self, eid, gm, cn, gns):
-        self.eid = eid
-        self.gm = gm
-        self.cn = cn
-        self.gns = gns
-
-    def __repr__(self):
-        return f"RBE2(eid={self.eid},gm={self.gm},cn={self.cn},gns={self.gns})"
 
 n = 500000
 rbes = [None] * n
@@ -83,7 +70,7 @@ class RBE2Storage2(object):
 
     def lookup_by_eids(self, eids):
         rows = self.df.loc[eids]
-        return [ RBE2(row.index, row.gm, row.cn, row.gns) for row in rows.itertuples() ]
+        return [ RBE2(row.Index, row.gm, row.cn, row.gns) for row in rows.itertuples() ]
 
     def lookup_by_gn(self, gn):
         eids = self.df[[gn in gns for gns in self.df.gns]].index
@@ -118,7 +105,7 @@ class RBE2Storage3(object):
 
     def lookup_by_eids(self, eids):
         rows = self.df.loc[eids]
-        return [ RBE2(row.index, row.gm, row.cn, row.gns) for row in rows.itertuples() ]
+        return [ RBE2(row.Index, row.gm, row.cn, row.gns) for row in rows.itertuples() ]
 
     def lookup_by_gn(self, gn):
         eids = self.gn_index[gn]
@@ -161,9 +148,9 @@ print(r.lookup_by_eid(2))
 t2 = time.perf_counter()
 print(len(r.lookup_by_gn(12)))
 t3 = time.perf_counter()
-print(f"Creation   : {t1-t0} seconds")
-print(f"LookupByEID: {t2-t1} seconds")
-print(f"LookupByGID: {t3-t2} seconds")
+print(f"Creation   : {t1-t0:.6f} seconds")
+print(f"LookupByEID: {t2-t1:.6f} seconds")
+print(f"LookupByGID: {t3-t2:.6f} seconds")
 
 t0 = time.perf_counter()
 r2 = RBE2Storage2(rbes)
@@ -173,9 +160,9 @@ print(r2.lookup_by_eid(2))
 t2 = time.perf_counter()
 print(len(r2.lookup_by_gn(12)))
 t3 = time.perf_counter()
-print(f"Creation   : {t1-t0} seconds")
-print(f"LookupByEID: {t2-t1} seconds")
-print(f"LookupByGID: {t3-t2} seconds")
+print(f"Creation   : {t1-t0:.6f} seconds")
+print(f"LookupByEID: {t2-t1:.6f} seconds")
+print(f"LookupByGID: {t3-t2:.6f} seconds")
 
 t0 = time.perf_counter()
 r3 = RBE2Storage3(rbes)
@@ -185,9 +172,9 @@ print(r3.lookup_by_eid(2))
 t2 = time.perf_counter()
 print(len(r3.lookup_by_gn(12)))
 t3 = time.perf_counter()
-print(f"Creation   : {t1-t0} seconds")
-print(f"LookupByEID: {t2-t1} seconds")
-print(f"LookupByGID: {t3-t2} seconds")
+print(f"Creation   : {t1-t0:.6f} seconds")
+print(f"LookupByEID: {t2-t1:.6f} seconds")
+print(f"LookupByGID: {t3-t2:.6f} seconds")
 
 t0 = time.perf_counter()
 r4 = RBE2Storage4(rbes)
@@ -197,6 +184,18 @@ print(r4.lookup_by_eid(2))
 t2 = time.perf_counter()
 print(len(r4.lookup_by_gn(12)))
 t3 = time.perf_counter()
-print(f"Creation   : {t1-t0} seconds")
-print(f"LookupByEID: {t2-t1} seconds")
-print(f"LookupByGID: {t3-t2} seconds")
+print(f"Creation   : {t1-t0:.6f} seconds")
+print(f"LookupByEID: {t2-t1:.6f} seconds")
+print(f"LookupByGID: {t3-t2:.6f} seconds")
+
+t0 = time.perf_counter()
+r5 = RBE2Storage5(rbes)
+t1 = time.perf_counter()
+print(r5)
+print(r5.lookup_by_eid(2))
+t2 = time.perf_counter()
+print(len(r5.lookup_by_gn(12)))
+t3 = time.perf_counter()
+print(f"Creation   : {t1-t0:.6f} seconds")
+print(f"LookupByEID: {t2-t1:.6f} seconds")
+print(f"LookupByGID: {t3-t2:.6f} seconds")
