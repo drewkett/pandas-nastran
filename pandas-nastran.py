@@ -90,7 +90,6 @@ class RBE2Storage2(object):
         rows = self.df.loc[eids]
         return [ RBE2(row.index, row.gd, row.ci, row.gis) for row in rows.itertuples() ]
 
-    # This would be slow
     def lookup_by_dgid(self, gid):
         eids = self.df[[gid in gis for gis in self.df.gis]].index
         return self.lookup_by_eids(eids)
@@ -154,7 +153,6 @@ class RBE2Storage4(object):
         rows = self.df.loc[eids]
         return rows.obj.tolist()
 
-    # This would be slow
     def lookup_by_dgid(self, gid):
         eids = self.df[[gid in gis for gis in self.df.gis]].index
         return self.lookup_by_eids(eids)
