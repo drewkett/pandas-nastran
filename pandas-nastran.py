@@ -100,17 +100,20 @@ class RBE2Storage3(object):
     def __init__(self, rbes):
         rows = []
         seen_eids = set()
-        index_rows = []
+        index = {}
         for i, rbe in enumerate(rbes):
             if rbe.eid in seen_eids:
                 raise Exception(f"RBE2 already exists for eid {eid}")
             rows.append((rbe.eid,rbe.gd,rbe.ci,rbe.gis))
             seen_eids.add(rbe.eid)
             for g in rbe.gis:
-                index_rows.append((g, rbe.eid))
+                if g in index:
+                    index[g].append(rbe.eid)
+                else:
+                    index[g] = [rbe.eid]
 
         self.df = pd.DataFrame.from_records(rows, columns=("eid","gd","ci","gis")).set_index("eid")
-        self.gid_index = pd.DataFrame.from_records(index_rows, columns=("gid","eid")).set_index("gid")
+        self.gid_index = index
 
     def lookup_by_eid(self, eid):
         row = self.df.loc[eid]
@@ -124,7 +127,7 @@ class RBE2Storage3(object):
         return [ RBE2(row.index, row.gd, row.ci, row.gis) for row in rows.itertuples() ]
 
     def lookup_by_dgid(self, gid):
-        eids = self.gid_index.loc[gid].eid
+        eids = self.gid_index[gid]
         return self.lookup_by_eids(eids)
 
 # This one stores independent nodes in a list, but also stores a copy of the original rbe object
