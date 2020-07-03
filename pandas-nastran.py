@@ -5,23 +5,16 @@ import random
 import time
 
 class RBE2(object):
-    __slots__ = ("eid","gd","ci","gis")
+    __slots__ = ("eid","gm","cn","gns")
 
-    def __init__(self, eid, gd, ci, gis):
+    def __init__(self, eid, gm, cn, gns):
         self.eid = eid
-        self.gd = gd
-        self.ci = ci
-        self.gis = gis
+        self.gm = gm
+        self.cn = cn
+        self.gns = gns
 
     def __repr__(self):
-        return f"RBE2(eid={self.eid},gd={self.gd},ci={self.ci},gis={self.gis})"
-
-#rbes = [
-#    #eid, gd,  ci, gi1, gi2, gi3
-#    RBE2(1,1,123,[10,11,12]),
-#    RBE2(2,2,3,[14,12]),
-#    RBE2(3,3,123,[15,11,14]),
-#]
+        return f"RBE2(eid={self.eid},gm={self.gm},cn={self.cn},gns={self.gns})"
 
 n = 500000
 rbes = [None] * n
@@ -36,19 +29,19 @@ class RBE2Storage(object):
         for rbe in rbes:
             if rbe.eid in seen_eids:
                 raise Exception(f"RBE2 already exists for eid {eid}")
-            for g in rbe.gis:
-                rows.append((rbe.eid,rbe.gd,rbe.ci,g))
+            for g in rbe.gns:
+                rows.append((rbe.eid,rbe.gm,rbe.cn,g))
             seen_eids.add(rbe.eid)
 
-        self.df = pd.DataFrame.from_records(rows, columns=("eid","gd","ci","gis"))
+        self.df = pd.DataFrame.from_records(rows, columns=("eid","gm","cn","gns"))
 
     def lookup_by_eid(self, eid):
         rows = self.df[self.df.eid == eid]
         if len(rows):
-            gd = rows.iloc[0].gd
-            ci = rows.iloc[0].ci
-            gis = rows.gis
-            return RBE2(eid, gd, ci, gis.tolist())
+            gm = rows.iloc[0].gm
+            cn = rows.iloc[0].cn
+            gns = rows.gns
+            return RBE2(eid, gm, cn, gns.tolist())
         else:
             raise ValueError(f"eid {eid} not found")
 
@@ -56,14 +49,14 @@ class RBE2Storage(object):
         rows = self.df[np.in1d(self.df.eid,eids)]
         result = []
         for eid, group in rows.groupby("eid"):
-            gd = group.iloc[0].gd
-            ci = group.iloc[0].ci
-            gis = group.gis.tolist()
-            result.append(RBE2(eid,gd,ci,gis))
+            gm = group.iloc[0].gm
+            cn = group.iloc[0].cn
+            gns = group.gns.tolist()
+            result.append(RBE2(eid,gm,cn,gns))
         return result
 
-    def lookup_by_dgid(self, gid):
-        eids = self.df[self.df.gis == gid].eid
+    def lookup_by_gn(self, gn):
+        eids = self.df[self.df.gns == gn].eid
         return self.lookup_by_eids(eids)
 
 # This one stores independent nodes in a list
@@ -74,24 +67,24 @@ class RBE2Storage2(object):
         for i, rbe in enumerate(rbes):
             if rbe.eid in seen_eids:
                 raise Exception(f"RBE2 already exists for eid {eid}")
-            rows.append((rbe.eid,rbe.gd,rbe.ci,rbe.gis))
+            rows.append((rbe.eid,rbe.gm,rbe.cn,rbe.gns))
             seen_eids.add(rbe.eid)
 
-        self.df = pd.DataFrame.from_records(rows, columns=("eid","gd","ci","gis")).set_index("eid")
+        self.df = pd.DataFrame.from_records(rows, columns=("eid","gm","cn","gns")).set_index("eid")
 
     def lookup_by_eid(self, eid):
         row = self.df.loc[eid]
         if len(row):
-            return RBE2(eid, row.gd, row.ci, row.gis)
+            return RBE2(eid, row.gm, row.cn, row.gns)
         else:
             raise ValueError(f"eid {eid} not found")
 
     def lookup_by_eids(self, eids):
         rows = self.df.loc[eids]
-        return [ RBE2(row.index, row.gd, row.ci, row.gis) for row in rows.itertuples() ]
+        return [ RBE2(row.index, row.gm, row.cn, row.gns) for row in rows.itertuples() ]
 
-    def lookup_by_dgid(self, gid):
-        eids = self.df[[gid in gis for gis in self.df.gis]].index
+    def lookup_by_gn(self, gn):
+        eids = self.df[[gn in gns for gns in self.df.gns]].index
         return self.lookup_by_eids(eids)
 
 # This one stores independent nodes in a list, but keeps an index
@@ -103,30 +96,30 @@ class RBE2Storage3(object):
         for i, rbe in enumerate(rbes):
             if rbe.eid in seen_eids:
                 raise Exception(f"RBE2 already exists for eid {eid}")
-            rows.append((rbe.eid,rbe.gd,rbe.ci,rbe.gis))
+            rows.append((rbe.eid,rbe.gm,rbe.cn,rbe.gns))
             seen_eids.add(rbe.eid)
-            for g in rbe.gis:
+            for g in rbe.gns:
                 if g in index:
                     index[g].append(rbe.eid)
                 else:
                     index[g] = [rbe.eid]
 
-        self.df = pd.DataFrame.from_records(rows, columns=("eid","gd","ci","gis")).set_index("eid")
-        self.gid_index = index
+        self.df = pd.DataFrame.from_records(rows, columns=("eid","gm","cn","gns")).set_index("eid")
+        self.gn_index = index
 
     def lookup_by_eid(self, eid):
         row = self.df.loc[eid]
         if len(row):
-            return RBE2(eid, row.gd, row.ci, row.gis)
+            return RBE2(eid, row.gm, row.cn, row.gns)
         else:
             raise ValueError(f"eid {eid} not found")
 
     def lookup_by_eids(self, eids):
         rows = self.df.loc[eids]
-        return [ RBE2(row.index, row.gd, row.ci, row.gis) for row in rows.itertuples() ]
+        return [ RBE2(row.index, row.gm, row.cn, row.gns) for row in rows.itertuples() ]
 
-    def lookup_by_dgid(self, gid):
-        eids = self.gid_index[gid]
+    def lookup_by_gn(self, gn):
+        eids = self.gn_index[gn]
         return self.lookup_by_eids(eids)
 
 # This one stores independent nodes in a list, but also stores a copy of the original rbe object
@@ -137,10 +130,10 @@ class RBE2Storage4(object):
         for i, rbe in enumerate(rbes):
             if rbe.eid in seen_eids:
                 raise Exception(f"RBE2 already exists for eid {eid}")
-            rows[i] = (rbe.eid,rbe.gd,rbe.ci,rbe.gis,rbe)
+            rows[i] = (rbe.eid,rbe.gm,rbe.cn,rbe.gns,rbe)
             seen_eids.add(rbe.eid)
 
-        self.df = pd.DataFrame.from_records(rows, columns=("eid","gd","ci","gis","obj")).set_index("eid")
+        self.df = pd.DataFrame.from_records(rows, columns=("eid","gm","cn","gns","obj")).set_index("eid")
 
     def lookup_by_eid(self, eid):
         row = self.df.loc[eid]
@@ -153,8 +146,8 @@ class RBE2Storage4(object):
         rows = self.df.loc[eids]
         return rows.obj.tolist()
 
-    def lookup_by_dgid(self, gid):
-        eids = self.df[[gid in gis for gis in self.df.gis]].index
+    def lookup_by_gn(self, gn):
+        eids = self.df[[gn in gns for gns in self.df.gns]].index
         return self.lookup_by_eids(eids)
 
 
@@ -164,7 +157,7 @@ t1 = time.perf_counter()
 print(r)
 print(r.lookup_by_eid(2))
 t2 = time.perf_counter()
-print(len(r.lookup_by_dgid(12)))
+print(len(r.lookup_by_gn(12)))
 t3 = time.perf_counter()
 print(f"Creation   : {t1-t0} seconds")
 print(f"LookupByEID: {t2-t1} seconds")
@@ -176,7 +169,7 @@ t1 = time.perf_counter()
 print(r2)
 print(r2.lookup_by_eid(2))
 t2 = time.perf_counter()
-print(len(r2.lookup_by_dgid(12)))
+print(len(r2.lookup_by_gn(12)))
 t3 = time.perf_counter()
 print(f"Creation   : {t1-t0} seconds")
 print(f"LookupByEID: {t2-t1} seconds")
@@ -188,7 +181,7 @@ t1 = time.perf_counter()
 print(r3)
 print(r3.lookup_by_eid(2))
 t2 = time.perf_counter()
-print(len(r3.lookup_by_dgid(12)))
+print(len(r3.lookup_by_gn(12)))
 t3 = time.perf_counter()
 print(f"Creation   : {t1-t0} seconds")
 print(f"LookupByEID: {t2-t1} seconds")
@@ -200,7 +193,7 @@ t1 = time.perf_counter()
 print(r4)
 print(r4.lookup_by_eid(2))
 t2 = time.perf_counter()
-print(len(r4.lookup_by_dgid(12)))
+print(len(r4.lookup_by_gn(12)))
 t3 = time.perf_counter()
 print(f"Creation   : {t1-t0} seconds")
 print(f"LookupByEID: {t2-t1} seconds")
