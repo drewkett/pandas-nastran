@@ -28,7 +28,7 @@ rbes = [None] * n
 for i in range(n):
     rbes[i] = RBE2(i,i,123,[random.randint(0,1000),random.randint(0,1000), random.randint(0,1000)])
 
-# This one stores each independant node in a different row
+# This one stores each independent node in a different row
 class RBE2Storage(object):
     def __init__(self, rbes):
         rows = []
@@ -66,7 +66,7 @@ class RBE2Storage(object):
         eids = self.df[self.df.gis == gid].eid
         return self.lookup_by_eids(eids)
 
-# This one stores independant nodes in a list
+# This one stores independent nodes in a list
 class RBE2Storage2(object):
     def __init__(self, rbes):
         rows = []
@@ -86,12 +86,16 @@ class RBE2Storage2(object):
         else:
             raise ValueError(f"eid {eid} not found")
 
+    def lookup_by_eids(self, eids):
+        rows = self.df.loc[eids]
+        return [ RBE2(row.index, row.gd, row.ci, row.gis) for row in rows.itertuples() ]
+
     # This would be slow
     def lookup_by_dgid(self, gid):
         eids = self.df[[gid in gis for gis in self.df.gis]].index
-        return [ self.lookup_by_eid(eid) for eid in eids ]
+        return self.lookup_by_eids(eids)
 
-# This one stores independant nodes in a list, but keeps an index
+# This one stores independent nodes in a list, but keeps an index
 class RBE2Storage3(object):
     def __init__(self, rbes):
         rows = []
@@ -115,11 +119,15 @@ class RBE2Storage3(object):
         else:
             raise ValueError(f"eid {eid} not found")
 
+    def lookup_by_eids(self, eids):
+        rows = self.df.loc[eids]
+        return [ RBE2(row.index, row.gd, row.ci, row.gis) for row in rows.itertuples() ]
+
     def lookup_by_dgid(self, gid):
         eids = self.gid_index.loc[gid].eid
-        return [ self.lookup_by_eid(eid) for eid in eids ]
+        return self.lookup_by_eids(eids)
 
-# This one stores independant nodes in a list, but also stores a copy of the original rbe object
+# This one stores independent nodes in a list, but also stores a copy of the original rbe object
 class RBE2Storage4(object):
     def __init__(self, rbes):
         rows = [None] * len(rbes)
@@ -139,10 +147,14 @@ class RBE2Storage4(object):
         else:
             raise ValueError(f"eid {eid} not found")
 
+    def lookup_by_eids(self, eids):
+        rows = self.df.loc[eids]
+        return rows.obj.tolist()
+
     # This would be slow
     def lookup_by_dgid(self, gid):
         eids = self.df[[gid in gis for gis in self.df.gis]].index
-        return [ self.lookup_by_eid(eid) for eid in eids ]
+        return self.lookup_by_eids(eids)
 
 
 t0 = time.perf_counter()
